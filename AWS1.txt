@@ -1,0 +1,141 @@
+week-7:
+
+STEP5: Creating the deplyoment code and monitoring
+
+import boto3
+from uuid import uuid4
+
+def lambda_handler(event, context):
+    s3 = boto3.client("s3")
+    dynamodb = boto3.resource('dynamodb')
+
+    # Check if the 'Records' key is present in the event
+    if 'Records' in event:
+        # Iterate over each record in the event
+        for record in event['Records']:
+            bucket_name = record['s3']['bucket']['name']
+            object_key = record['s3']['object']['key']
+            size = record['s3']['object'].get('size', -1)
+
+            # Use get() method to handle missing keys
+            event_name = record.get('eventName', 'Unknown')
+            event_time = record.get('eventTime', 'Unknown')
+
+            dynamoTable = dynamodb.Table('newtable')
+
+            dynamoTable.put_item(
+                Item={
+                    'unique': str(uuid4()),
+                    'Bucket': bucket_name,
+                    'Object': object_key,
+                    'Size': size,
+                    'Event': event_name,
+                    'EventTime': event_time
+                }
+            )
+    else:
+        # Log a message if 'Records' key is missing
+        print("No 'Records' key found in the event.")
+
+/////////////////////////////////////////////
+Create a policy if you are getting the Iam role problem Otherwise skip this
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow", "Action": "dynamodb:PutItem",
+"Resource": "arn:aws:dynamodb:us-west-2:669420739378:table/newtable"
+}
+]
+}
+
+/////////////////////////////////////////////////////
+week8
+
+Step 3: Allow S3 to Publish to SNS (Access Policy)
+
+{
+ "Version": "2012-10-17",
+ "Id": "example-ID",
+ "Statement": [
+ {
+ "Sid": "Example SNS topic policy",
+ "Effect": "Allow",
+ "Principal": {
+ "Service": "s3.amazonaws.com"
+ },
+ "Action": [
+ "SNS:Publish"
+ ],
+ "Resource": "SNS topic ARN",
+ "Condition": {
+ "ArnLike": {
+ "aws:SourceArn": "s3 bucket ARN"
+ },
+ "StringEquals": {
+ "aws:SourceAccount": "account id"
+ }
+ }
+ }
+ ]
+}
+
+
+SQS
+
+{
+ "Statement": [
+ {
+ "Effect": "Allow",
+ "Principal": {
+ "Service": "sns.amazonaws.com"
+ },
+ "Action": "sqs:SendMessage",
+ "Resource": "SQS ARN",
+ "Condition": {
+ "ArnEquals": {
+ "aws:SourceArn": "SNS ARN"
+ }
+ }
+ }
+ ]
+}
+
+ Add Access Policy to SNS
+{
+ "Version": "2012-10-17",
+ "Id": "example-ID",
+ "Statement": [
+ {
+ "Sid": "Example SNS topic policy",
+ "Effect": "Allow",
+ "Principal": {
+ "Service": "s3.amazonaws.com"
+ },
+ "Action": [
+ "SNS:Publish"
+ ],
+ "Resource": "SNS topic ARN",
+ "Condition": {
+ "ArnLike": {
+ "aws:SourceArn": "S3 bucket ARN"
+ },
+ "StringEquals": {
+ "aws:SourceAccount": "Account ID"
+ }
+ }
+ }
+ ]
+}
+
+///////////////////////////////////////////////////////
+
+exp-9
+
+Run these commands after connecting VM
+yum update -y
+yum install httpd -y
+systemctl start httpd
+systemctl enable httpd
+echo "This is Server 1" > /var/www/html/index.html

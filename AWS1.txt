@@ -139,3 +139,11 @@ yum install httpd -y
 systemctl start httpd
 systemctl enable httpd
 echo "This is Server 1" > /var/www/html/index.html
+
+
+
+region name:ap-south-1
+format:json
+aws ec2 describe-instance
+aws s3 ls
+Run awss3 mb s3://your-unique-bucket-name

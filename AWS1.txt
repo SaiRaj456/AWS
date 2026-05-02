@@ -147,3 +147,7 @@ format:json
 aws ec2 describe-instance
 aws s3 ls
 Run awss3 mb s3://your-unique-bucket-name
+
+
+
+scp –i bastion.pem dbserver.pem ubuntu@<BASTION_PUBLIC_IP>:/home/ubuntu
